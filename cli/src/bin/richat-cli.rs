@@ -833,7 +833,7 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn main2() -> anyhow::Result<()> {
+/*fn main() -> anyhow::Result<()> {
     tokio::runtime::Builder::new_multi_thread()
         .thread_name_fn(move || {
             static ATOMIC_ID: AtomicU64 = AtomicU64::new(0);
@@ -843,4 +843,4 @@ fn main2() -> anyhow::Result<()> {
         .enable_all()
         .build()?
         .block_on(main2())
-}
+}*/
