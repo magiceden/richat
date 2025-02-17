@@ -25,10 +25,11 @@ rustls-pemfile = { workspace = true }
 serde = { workspace = true }
 solana-sdk = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["rt-multi-thread", "fs"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "fs", "signal"] }
 tonic = { workspace = true, features = ["tls-native-roots"] }
 tracing = { workspace = true }
 webpki-roots = { workspace = true }
+rdkafka = { version = "^0.37.0", features = ["ssl", "sasl", "zstd", "gssapi"]}
 
 [build-dependencies]
 anyhow = { workspace = true }

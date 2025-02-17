@@ -1,3 +1,9 @@
+#[cfg(unix)]
+use tokio::signal::unix::{signal, SignalKind};
+use std::pin::Pin;
+use std::task::Poll;
+use futures::Stream;
+use futures::task::noop_waker_ref;
 use {
     agave_geyser_plugin_interface::geyser_plugin_interface::{
         ReplicaAccountInfoV3, ReplicaBlockInfoV4, ReplicaEntryInfoV2, ReplicaTransactionInfoV2,
@@ -605,7 +611,8 @@ fn convert_prost_to_raw(msg: &SubscribeUpdate) -> anyhow::Result<Option<Vec<u8>>
     }))
 }
 
-async fn main2() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     env::set_var(
         env_logger::DEFAULT_FILTER_ENV,
         env::var_os(env_logger::DEFAULT_FILTER_ENV).unwrap_or_else(|| "info".into()),
@@ -663,7 +670,16 @@ async fn main2() -> anyhow::Result<()> {
     };
 
     tokio::pin!(stream);
-    while let Some(message) = stream.next().await {
+    let waker = noop_waker_ref();
+    let mut cx = std::task::Context::from_waker(waker);
+    while Pin::new(&mut stream).poll_next(&mut cx).is_ready() {}
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {
+            println!("Received Ctrl+C, shutting down...");
+        }
+        _ = tokio::time::sleep(tokio::time::Duration::MAX) => {},
+    }
+    /*while let Some(message) = stream.next().await {
         match message {
             Ok(msg) => {
                 if args.stats {
@@ -813,11 +829,11 @@ async fn main2() -> anyhow::Result<()> {
             }
         }
     }
-    info!("stream closed");
+    info!("stream closed");*/
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
+fn main2() -> anyhow::Result<()> {
     tokio::runtime::Builder::new_multi_thread()
         .thread_name_fn(move || {
             static ATOMIC_ID: AtomicU64 = AtomicU64::new(0);
